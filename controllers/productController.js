@@ -61,20 +61,31 @@ const deleteProduct = asyncHandler(async (req, res) => {
 // @route   POST /api/products
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
+  const {
+    name,
+    price,
+    image, // Cloudinary URL
+    brand,
+    category,
+    countInStock,
+    description
+  } = req.body;
+
   const product = await Product.create({
-    name: 'Sample name',
-    price: 0,
+    name,
+    price,
     user: req.user.id,
-    image: '/images/sample.jpg',
-    brand: 'Sample brand',
-    category: 'Sample category',
-    countInStock: 0,
+    image, // ← store Cloudinary image URL here
+    brand,
+    category,
+    countInStock,
     numReviews: 0,
-    description: 'Sample description'
+    description
   });
 
   res.status(201).json(product);
 });
+
 
 // @desc    Update a product
 // @route   PUT /api/products/:id
