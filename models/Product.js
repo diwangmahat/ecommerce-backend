@@ -44,6 +44,10 @@ const Product = db.define('Product', {
     type: DataTypes.INTEGER,
     defaultValue: 0
   },
+  featured: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
@@ -57,7 +61,6 @@ const Product = db.define('Product', {
 Product.associate = function(models) {
   Product.hasMany(models.Review, {
     foreignKey: 'productId',
-    onDelete: 'CASCADE'
   });
 };
 

@@ -33,7 +33,6 @@ const Review = db.define('Review', {
 Review.associate = function(models) {
   Review.belongsTo(models.Product, {
     foreignKey: 'productId',
-    onDelete: 'CASCADE'
   });
   Review.belongsTo(models.User, {
     foreignKey: 'userId',

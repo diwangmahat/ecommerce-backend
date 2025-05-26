@@ -2,30 +2,49 @@ const asyncHandler = require('express-async-handler');
 const { Op } = require('sequelize');
 const Product = require('../models/Product');
 const Review = require('../models/Review');
-// @desc    Fetch all products
+const sequelize = require('../config/db');
+
+// @desc    Fetch all products with filters, search, and pagination
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
-  const pageSize = 32;
+  const pageSize = Number(req.query.limit) || 32;
   const page = Number(req.query.pageNumber) || 1;
 
-  const keyword = req.query.keyword
-    ? {
-        name: {
-          [Op.iLike]: `%${req.query.keyword}%`
-        }
-      }
-    : {};
+  const filters = {};
 
-  const count = await Product.count({ where: keyword });
+  // Keyword search
+  if (req.query.keyword) {
+    filters.name = {
+      [Op.iLike]: `%${req.query.keyword}%`
+    };
+  }
+
+  // Category filter
+  if (req.query.category) {
+    filters.category = req.query.category;
+  }
+
+  // Featured filter
+  if (req.query.featured) {
+    filters.featured = req.query.featured === 'true';
+  }
+
+  const count = await Product.count({ where: filters });
+
   const products = await Product.findAll({
-    where: keyword,
+    where: filters,
     limit: pageSize,
     offset: pageSize * (page - 1),
     order: [['createdAt', 'DESC']]
   });
 
-  res.json({ products, page, pages: Math.ceil(count / pageSize) });
+  res.json({
+    products,
+    page,
+    pages: Math.ceil(count / pageSize),
+    total: count
+  });
 });
 
 // @desc    Fetch single product
@@ -68,24 +87,25 @@ const createProduct = asyncHandler(async (req, res) => {
     brand,
     category,
     countInStock,
-    description
+    description,
+    featured
   } = req.body;
 
   const product = await Product.create({
     name,
     price,
     user: req.user.id,
-    image, // ← store Cloudinary image URL here
+    image,
     brand,
     category,
     countInStock,
     numReviews: 0,
-    description
+    description,
+    featured: featured || false
   });
 
   res.status(201).json(product);
 });
-
 
 // @desc    Update a product
 // @route   PUT /api/products/:id
@@ -98,7 +118,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     image,
     brand,
     category,
-    countInStock
+    countInStock,
+    featured
   } = req.body;
 
   const product = await Product.findByPk(req.params.id);
@@ -111,6 +132,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.brand = brand;
     product.category = category;
     product.countInStock = countInStock;
+    product.featured = featured || false;
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
@@ -153,7 +175,8 @@ const createProductReview = asyncHandler(async (req, res) => {
     });
 
     product.numReviews = reviews.length;
-    product.rating = reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
+    product.rating =
+      reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
 
     await product.save();
 
@@ -163,7 +186,6 @@ const createProductReview = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
 });
-
 
 // @desc    Get top rated products
 // @route   GET /api/products/top
@@ -177,10 +199,13 @@ const getTopProducts = asyncHandler(async (req, res) => {
   res.json(products);
 });
 
+// @desc    Get product statistics
+// @route   GET /api/products/stats
+// @access  Private/Admin
 const getProductStats = asyncHandler(async (req, res) => {
   const totalProducts = await Product.count();
   const outOfStock = await Product.count({ where: { countInStock: 0 } });
-  
+
   const categories = await Product.findAll({
     attributes: [
       'category',
@@ -188,19 +213,20 @@ const getProductStats = asyncHandler(async (req, res) => {
     ],
     group: ['category']
   });
-  
+
   const lowStock = await Product.count({
     where: {
-      countInStock: { [Op.lt]: 10 },
-      countInStock: { [Op.gt]: 0 }
+      countInStock: {
+        [Op.and]: [{ [Op.lt]: 10 }, { [Op.gt]: 0 }]
+      }
     }
   });
-  
-  res.json({ 
-    totalProducts, 
-    outOfStock, 
+
+  res.json({
+    totalProducts,
+    outOfStock,
     lowStock,
-    categories 
+    categories
   });
 });
 

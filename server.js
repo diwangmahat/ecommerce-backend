@@ -1,6 +1,7 @@
 const app = require('./app');
 const http = require('http');
 const { Server } = require('socket.io');
+const sequelize = require('./config/db');
 
 const PORT = process.env.PORT || 5000;
 
@@ -35,7 +36,16 @@ io.on('connection', (socket) => {
 // Make io accessible to routes
 app.set('io', io);
 
-server.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}
-    http://localhost:${PORT}`);
-});
+sequelize.sync({ alter: true }) 
+  .then(() => {
+    console.log('Database synced with models');
+
+    
+    server.listen(PORT, () => {
+      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}
+      http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Error syncing database:', err);
+  });
