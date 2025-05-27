@@ -25,6 +25,12 @@ const getProducts = asyncHandler(async (req, res) => {
     filters.category = req.query.category;
   }
 
+  // Gender filter
+if (req.query.gender) {
+  filters.gender = req.query.gender;
+}
+
+
   // Featured filter
   if (req.query.featured) {
     filters.featured = req.query.featured === 'true';

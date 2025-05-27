@@ -23,6 +23,10 @@ const Product = db.define('Product', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  gender: {
+  type: DataTypes.STRING,
+  allowNull: true
+  },
   brand: {
     type: DataTypes.STRING,
     allowNull: false
