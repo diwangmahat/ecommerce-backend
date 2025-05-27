@@ -3,7 +3,6 @@ const { Op } = require('sequelize');
 const stripe = require('../config/stripe');
 const Order = require('../models/Order');
 const User = require('../models/User');
-const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 
 // @desc    Create new order
@@ -34,11 +33,6 @@ const addOrderItems = asyncHandler(async (req, res) => {
       shippingPrice,
       totalPrice
     });
-
-    // Clear the user's cart
-    await Cart.destroy({ where: { userId: req.user.id } });
-
-    res.status(201).json(order);
   }
 });
 

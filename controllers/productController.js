@@ -87,28 +87,32 @@ const deleteProduct = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
   const {
-    name,
-    price,
-    image, // Cloudinary URL
-    brand,
-    category,
-    countInStock,
-    description,
-    featured
-  } = req.body;
+  name,
+  price,
+  image,
+  brand,
+  category,
+  countInStock,
+  description,
+  featured,
+  size,   
+  color   
+} = req.body;
 
-  const product = await Product.create({
-    name,
-    price,
-    user: req.user.id,
-    image,
-    brand,
-    category,
-    countInStock,
-    numReviews: 0,
-    description,
-    featured: featured || false
-  });
+const product = await Product.create({
+  name,
+  price,
+  user: req.user.id,
+  image,
+  brand,
+  category,
+  countInStock,
+  numReviews: 0,
+  description,
+  featured: featured || false,
+  size,   
+  color   
+});
 
   res.status(201).json(product);
 });
@@ -125,7 +129,9 @@ const updateProduct = asyncHandler(async (req, res) => {
     brand,
     category,
     countInStock,
-    featured
+    featured,
+    size,
+    color
   } = req.body;
 
   const product = await Product.findByPk(req.params.id);
@@ -139,6 +145,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.category = category;
     product.countInStock = countInStock;
     product.featured = featured || false;
+    product.size = size;   
+  product.color = color;
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);

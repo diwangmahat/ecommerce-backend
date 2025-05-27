@@ -11,7 +11,6 @@ const db = require('./config/db');
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
-const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const userRoutes = require('./routes/userRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
@@ -22,7 +21,7 @@ const Product = require('./models/Product');
 const Review = require('./models/Review');
 const Order = require('./models/Order');
 const OrderItem = require('./models/OrderItems');
-const Cart = require('./models/Cart');
+
 
 // Get all models
 const models = {
@@ -31,7 +30,6 @@ const models = {
   Review,
   Order,
   OrderItem,
-  Cart
 };
 
 // Test DB connection and set up associations
@@ -64,7 +62,6 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/analytics', analyticsRoutes);

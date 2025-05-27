@@ -37,7 +37,7 @@ OrderItem.associate = function(models) {
   OrderItem.belongsTo(models.Order, {
     foreignKey: 'orderId',
     onDelete: 'CASCADE',
-    as: 'order' // ✅ Different alias
+    as: 'order' 
   });
   OrderItem.belongsTo(models.Product, {
     foreignKey: 'productId',

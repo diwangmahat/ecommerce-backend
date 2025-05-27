@@ -35,6 +35,14 @@ const Product = db.define('Product', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  size: {
+  type: DataTypes.ARRAY(DataTypes.STRING), // e.g., ['S', 'M', 'L']
+  allowNull: true,
+},
+color: {
+  type: DataTypes.STRING, // e.g., 'Red'
+  allowNull: true,
+},
   countInStock: {
     type: DataTypes.INTEGER,
     allowNull: false,
