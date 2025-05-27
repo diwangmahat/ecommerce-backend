@@ -60,10 +60,6 @@ User.associate = function (models) {
     foreignKey: 'userId',
     onDelete: 'SET NULL'
   });
-  User.hasMany(models.Cart, {
-    foreignKey: 'userId',
-    onDelete: 'CASCADE'
-  });
 };
 
 module.exports = User;

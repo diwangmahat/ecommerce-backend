@@ -36,13 +36,13 @@ const Product = db.define('Product', {
     allowNull: false
   },
   size: {
-  type: DataTypes.ARRAY(DataTypes.STRING), // e.g., ['S', 'M', 'L']
-  allowNull: true,
-},
-color: {
-  type: DataTypes.STRING, // e.g., 'Red'
-  allowNull: true,
-},
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    allowNull: true
+  },
+  color: {
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    allowNull: true
+  },
   countInStock: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -50,10 +50,6 @@ color: {
   },
   rating: {
     type: DataTypes.FLOAT,
-    defaultValue: 0
-  },
-  numReviews: {
-    type: DataTypes.INTEGER,
     defaultValue: 0
   },
   featured: {

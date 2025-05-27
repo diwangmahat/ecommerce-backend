@@ -146,7 +146,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.countInStock = countInStock;
     product.featured = featured || false;
     product.size = size;   
-  product.color = color;
+    product.color = color;
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
