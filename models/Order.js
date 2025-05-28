@@ -15,7 +15,6 @@ const Order = db.define('Order', {
       key: 'id'
     }
   },
-  // ... other fields
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
@@ -34,7 +33,7 @@ Order.associate = function(models) {
 
   Order.hasMany(models.OrderItem, {
     foreignKey: 'orderId',
-    as: 'orderItems', 
+    as: 'orderItem', 
     onDelete: 'CASCADE'
   });
 };

@@ -1,6 +1,6 @@
 const sequelize = require('../backend/config/db');
 const Product = require('../backend/models/Product');
-const User = require('../backend/models/User'); // 👈 Import User model
+const User = require('../backend/models/User'); 
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
@@ -8,7 +8,7 @@ require('dotenv').config();
 const adminUser = {
   name: 'Admin User',
   email: 'admin@example.com',
-  password: 'Admin@123', // Will be hashed
+  password: 'Admin@123',
   role: 'admin',
 };
 

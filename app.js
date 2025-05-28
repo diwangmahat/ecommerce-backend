@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
+require('dotenv').config();
 const app = express();
 
 // Database connection
@@ -31,25 +32,6 @@ const models = {
   Order,
   OrderItem,
 };
-
-// Test DB connection and set up associations
-db.authenticate()
-  .then(() => {
-    console.log('Database connected...');
-    
-    // Set up associations
-    Object.keys(models).forEach(modelName => {
-      if (typeof models[modelName].associate === 'function') {
-        models[modelName].associate(models);
-      }
-    });
-
-    // Sync models
-    return db.sync({ alter: true });
-  })
-  .then(() => console.log('Models synced...'))
-  .catch(err => console.log('Error: ' + err));
-
 
 // Middleware
 app.use(cors({
