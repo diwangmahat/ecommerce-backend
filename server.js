@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
 
 app.set('io', io);
 
-  sequelize.sync({ force: true }) 
+  sequelize.sync({ alter: true }) 
   .then(() => {
     console.log('Database synced with models');
 
