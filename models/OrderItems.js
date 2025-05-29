@@ -7,21 +7,51 @@ const OrderItem = db.define('OrderItem', {
     primaryKey: true,
     autoIncrement: true
   },
+  orderId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'Orders',
+      key: 'id'
+    }
+  },
+  productId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'Products',
+      key: 'id'
+    }
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false
   },
   quantity: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 1
+    }
   },
   price: {
     type: DataTypes.FLOAT,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   image: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  size: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  color: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -36,13 +66,14 @@ const OrderItem = db.define('OrderItem', {
 OrderItem.associate = function(models) {
   OrderItem.belongsTo(models.Order, {
     foreignKey: 'orderId',
-    onDelete: 'CASCADE',
-    as: 'order' 
+    as: 'order',
+    onDelete: 'CASCADE'
   });
+  
   OrderItem.belongsTo(models.Product, {
     foreignKey: 'productId',
-    onDelete: 'SET NULL',
-    as: 'product'
+    as: 'product',
+    onDelete: 'SET NULL'
   });
 };
 

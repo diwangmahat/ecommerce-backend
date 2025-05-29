@@ -9,12 +9,14 @@ const app = express();
 // Database connection
 const db = require('./config/db');
 
+
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const userRoutes = require('./routes/userRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const stripeRoutes = require('./routes/stripeRoutes');
 
 // Import models
 const User = require('./models/User');
@@ -22,6 +24,7 @@ const Product = require('./models/Product');
 const Review = require('./models/Review');
 const Order = require('./models/Order');
 const OrderItem = require('./models/OrderItems');
+
 
 
 // Get all models
@@ -47,6 +50,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/payment', stripeRoutes);
+
 
 
 // Health check endpoint

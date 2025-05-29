@@ -15,6 +15,34 @@ const Order = db.define('Order', {
       key: 'id'
     }
   },
+  paymentIntentId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  customerEmail: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      isEmail: true
+    }
+  },
+  customerName: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  totalAmount: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  status: {
+    type: DataTypes.ENUM('pending', 'paid', 'shipped', 'delivered', 'cancelled'),
+    defaultValue: 'pending'
+  },
+  paymentStatus: {
+    type: DataTypes.ENUM('pending', 'completed', 'failed', 'refunded'),
+    defaultValue: 'pending'
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
@@ -33,7 +61,7 @@ Order.associate = function(models) {
 
   Order.hasMany(models.OrderItem, {
     foreignKey: 'orderId',
-    as: 'orderItem', 
+    as: 'orderItems', // Changed from 'orderItem' to 'orderItems' for consistency
     onDelete: 'CASCADE'
   });
 };
