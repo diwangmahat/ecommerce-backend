@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('User', {
+  const User = sequelize.define("User", {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -13,34 +13,20 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      validate: { isEmail: true },
     },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('user', 'admin'),
-      defaultValue: 'user',
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+      type: DataTypes.STRING,
+      defaultValue: "user",
     },
   });
 
-  User.associate = function (models) {
-    User.hasMany(models.Review, {
-      foreignKey: 'userId',
-      onDelete: 'SET NULL',
-    });
+  User.associate = (models) => {
     User.hasMany(models.Order, {
-      foreignKey: 'userId',
-      onDelete: 'SET NULL',
+      foreignKey: "userId",
     });
   };
 

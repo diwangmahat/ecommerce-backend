@@ -128,7 +128,7 @@ const sampleProducts = [
     brand: 'Puma',
     price: 24.99,
     countInStock: 9,
-    image: 'images/men-tshirt3.jpg',
+    image: '/images/men-tshirt3.jpg',
   },
   {
     name: 'Men T-Shirt 4',

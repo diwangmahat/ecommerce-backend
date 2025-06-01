@@ -1,6 +1,5 @@
-// models/Order.js
 module.exports = (sequelize, DataTypes) => {
-  const Order = sequelize.define('Order', {
+  const Order = sequelize.define("Order", {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -9,20 +8,14 @@ module.exports = (sequelize, DataTypes) => {
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'Users',
-        key: 'id',
-      },
     },
     paymentIntentId: {
       type: DataTypes.STRING,
-      allowNull: true,
-      unique: true,
+      allowNull: false,
     },
     customerEmail: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: { isEmail: true },
     },
     customerName: {
       type: DataTypes.STRING,
@@ -31,34 +24,35 @@ module.exports = (sequelize, DataTypes) => {
     totalAmount: {
       type: DataTypes.FLOAT,
       allowNull: false,
-      validate: { min: 0 },
+    },
+    // Add alias for frontend compatibility
+    totalPrice: {
+      type: DataTypes.VIRTUAL,
+      get() {
+        return this.totalAmount;
+      },
+      set(value) {
+        this.setDataValue('totalAmount', value);
+      }
     },
     status: {
-      type: DataTypes.ENUM('pending', 'paid', 'delivered', 'cancelled'),
-      defaultValue: 'pending',
+      type: DataTypes.STRING,
+      defaultValue: "pending",
     },
     paymentStatus: {
-      type: DataTypes.ENUM('pending', 'completed', 'failed'),
-      defaultValue: 'pending',
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+      type: DataTypes.STRING,
+      defaultValue: "pending",
     },
   });
 
-  Order.associate = function (models) {
+  Order.associate = (models) => {
     Order.belongsTo(models.User, {
-      foreignKey: 'userId',
-      as: 'user',
+      foreignKey: "userId",
+      as: "user",
     });
     Order.hasMany(models.OrderItems, {
-      foreignKey: 'orderId',
-      as: 'orderItems',
+      foreignKey: "orderId",
+      as: "orderItems",
     });
   };
 
