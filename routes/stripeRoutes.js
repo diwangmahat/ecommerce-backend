@@ -1,121 +1,119 @@
-// stripeRoutes.js
+// backend/routes/stripeRoutes.js
 const express = require('express');
 const router = express.Router();
-const stripe = require('../config/stripe');
-const { protect } = require('../middleware/authMiddleware');
-const Order = require('../models/Order');
+const asyncHandler = require('express-async-handler');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { Order, OrderItems } = require('../models');
 
-// Existing routes
-router.post('/create-payment-intent', protect, async (req, res) => {
+// @desc    Create a payment intent
+// @route   POST /api/stripe/create-payment-intent
+// @access  Private
+router.post('/create-payment-intent', asyncHandler(async (req, res) => {
+  const { amount, currency = 'usd', metadata } = req.body;
+
+  if (!amount || amount <= 0) {
+    res.status(400);
+    throw new Error('Invalid amount');
+  }
+
+  if (!metadata || !metadata.customerEmail || !metadata.customerName || !metadata.orderItems) {
+    res.status(400);
+    throw new Error('Missing required metadata');
+  }
+
   try {
-    const { amount, currency = 'usd', metadata } = req.body;
-
-    if (!amount || amount < 50) {
-      return res.status(400).json({ error: 'Invalid amount' });
-    }
-
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency,
-      metadata: {
-        ...metadata,
-        userId: req.user.id.toString(),
-      },
+      metadata,
       payment_method_types: ['card'],
-      description: `Order for ${metadata.customerEmail}`,
     });
 
     res.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
+      mock: !process.env.STRIPE_SECRET_KEY?.startsWith('sk_'),
     });
   } catch (error) {
     console.error('Error creating payment intent:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500);
+    throw new Error('Failed to create payment intent');
   }
-});
+}));
 
-router.post('/confirm-payment', protect, async (req, res) => {
-  const transaction = await Order.sequelize.transaction();
+// @desc    Confirm payment and create order
+// @route   POST /api/stripe/confirm-payment
+// @access  Private
+router.post('/confirm-payment', asyncHandler(async (req, res) => {
+  const { paymentIntentId } = req.body;
+  const user = req.user;
+
+  if (!paymentIntentId) {
+    res.status(400);
+    throw new Error('Payment intent ID is required');
+  }
+
   try {
-    const { paymentIntentId } = req.body;
-
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
     if (paymentIntent.status !== 'succeeded') {
-      return res.status(400).json({ error: 'Payment not succeeded' });
+      res.status(400);
+      throw new Error('Payment not successful');
     }
 
-    const { customerEmail, customerName, orderItems, userId: metadataUserId } = paymentIntent.metadata;
+    const { customerEmail, customerName, orderItems, userId } = paymentIntent.metadata;
+    const parsedOrderItems = JSON.parse(orderItems);
 
-    if (parseInt(metadataUserId) !== req.user.id) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
+    const order = await Order.create({
+      userId: userId || user?.id,
+      paymentIntentId,
+      customerEmail,
+      customerName,
+      totalAmount: paymentIntent.amount / 100,
+      status: 'paid',
+      paymentStatus: 'completed',
+    });
 
-    const items = JSON.parse(orderItems);
-    const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    const order = await Order.create(
-      {
-        userId: req.user.id,
-        customerEmail,
-        customerName,
-        paymentIntentId,
-        totalAmount,
-        status: 'paid',
-        paymentStatus: 'completed',
-      },
-      { transaction }
-    );
-
-    const orderItemsData = items.map((item) => ({
+    const orderItemsData = parsedOrderItems.map(item => ({
       orderId: order.id,
       productId: item.id,
       name: item.name,
       quantity: item.quantity,
-      price: item.price,
-      image: item.image || '',
+      price: item.onSale && item.salePrice != null ? item.salePrice : item.price, // Use salePrice if onSale
+      image: item.image,
       size: item.size,
       color: item.color,
     }));
 
-    await Order.OrderItem.bulkCreate(orderItemsData, { transaction });
-
-    await transaction.commit();
+    await OrderItems.bulkCreate(orderItemsData);
 
     res.json({
-      success: true,
       orderId: order.id,
-      paymentIntentId,
+      customerEmail,
+      customerName,
+      totalAmount: order.totalAmount,
+      orderItems: orderItemsData,
     });
   } catch (error) {
-    await transaction.rollback();
     console.error('Error confirming payment:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500);
+    throw new Error('Failed to confirm payment');
   }
-});
+}));
 
-// New route to fetch payment intent details
-router.get('/payment-intents/:id', protect, async (req, res) => {
+// @desc    Get payment intent details
+// @route   GET /api/stripe/payment-intents/:id
+// @access  Private
+router.get('/payment-intents/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const { id } = req.params;
     const paymentIntent = await stripe.paymentIntents.retrieve(id);
-
-    if (paymentIntent.metadata.userId !== req.user.id.toString()) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    res.json({
-      id: paymentIntent.id,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
-      status: paymentIntent.status,
-      client_secret: paymentIntent.client_secret,
-    });
+    res.json(paymentIntent);
   } catch (error) {
-    console.error('Error fetching payment intent:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error retrieving payment intent:', error);
+    res.status(404);
+    throw new Error('Payment intent not found');
   }
-});
+}));
 
 module.exports = router;

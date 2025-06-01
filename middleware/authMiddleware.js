@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
-const User = require('../models/User');
+const { User } = require('../models'); // Updated import
 
 const protect = asyncHandler(async (req, res, next) => {
   let token;
@@ -12,12 +12,14 @@ const protect = asyncHandler(async (req, res, next) => {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Decoded user ID:', decoded.id); // Debug
       req.user = await User.findByPk(decoded.id, {
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password'] },
       });
+      console.log('Found user:', req.user); // Debug
       next();
     } catch (error) {
-      console.error(error);
+      console.error('Token verification error:', error);
       res.status(401);
       throw new Error('Not authorized, token failed');
     }

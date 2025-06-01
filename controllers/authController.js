@@ -1,6 +1,7 @@
+// controllers/authController.js
 const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { User } = require('../models');
 
 // @desc    Auth user & get token
 // @route   POST /api/auth/login
@@ -10,9 +11,9 @@ const authUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ where: { email } });
 
-  if (user && (await user.matchPassword(password))) {
+  if (user && user.password === password) {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE
+      expiresIn: process.env.JWT_EXPIRE,
     });
 
     res.json({
@@ -20,7 +21,7 @@ const authUser = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token
+      token,
     });
   } else {
     res.status(401);
@@ -44,13 +45,13 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({
     name,
     email,
-    password,
-    role: 'user'
+    password, // Store plain-text password
+    role: 'user',
   });
 
   if (user) {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE
+      expiresIn: process.env.JWT_EXPIRE,
     });
 
     res.status(201).json({
@@ -58,7 +59,7 @@ const registerUser = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token
+      token,
     });
   } else {
     res.status(400);
@@ -71,7 +72,7 @@ const registerUser = asyncHandler(async (req, res) => {
 // @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findByPk(req.user.id, {
-    attributes: { exclude: ['password'] }
+    attributes: { exclude: ['password'] },
   });
 
   if (user) {
@@ -92,13 +93,13 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
     if (req.body.password) {
-      user.password = req.body.password;
+      user.password = req.body.password; // Update plain-text password
     }
 
     const updatedUser = await user.save();
 
     const token = jwt.sign({ id: updatedUser.id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE
+      expiresIn: process.env.JWT_EXPIRE,
     });
 
     res.json({
@@ -106,7 +107,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
-      token
+      token,
     });
   } else {
     res.status(404);
@@ -118,5 +119,5 @@ module.exports = {
   authUser,
   registerUser,
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
 };

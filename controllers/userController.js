@@ -1,6 +1,7 @@
+// controllers/userController.js
 const asyncHandler = require('express-async-handler');
-const User = require('../models/User');
-const Order = require('../models/Order');
+const { User, Order } = require('../models');
+const sequelize = require('../config/db');
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -8,7 +9,7 @@ const Order = require('../models/Order');
 const getUsers = asyncHandler(async (req, res) => {
   const users = await User.findAll({
     attributes: { exclude: ['password'] },
-    order: [['createdAt', 'DESC']]
+    order: [['createdAt', 'DESC']],
   });
   res.json(users);
 });
@@ -18,7 +19,7 @@ const getUsers = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const getUserById = asyncHandler(async (req, res) => {
   const user = await User.findByPk(req.params.id, {
-    attributes: { exclude: ['password'] }
+    attributes: { exclude: ['password'] },
   });
 
   if (user) {
@@ -46,7 +47,7 @@ const updateUser = asyncHandler(async (req, res) => {
       id: updatedUser.id,
       name: updatedUser.name,
       email: updatedUser.email,
-      role: updatedUser.role
+      role: updatedUser.role,
     });
   } else {
     res.status(404);
@@ -54,8 +55,9 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Delete user
-
+// @desc    Delete user
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
 const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findByPk(req.params.id);
 
@@ -68,38 +70,38 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
 });
 
-
 // @desc    Get user statistics with order data
 // @route   GET /api/users/stats
-//@access    Private/Admin
+// @access  Private/Admin
 const getUserStats = asyncHandler(async (req, res) => {
   const totalUsers = await User.count();
   const adminUsers = await User.count({ where: { role: 'admin' } });
   const regularUsers = totalUsers - adminUsers;
-  
-  // Get users with their order counts
+
   const activeUsers = await User.findAll({
     attributes: [
       'id',
       'name',
       'email',
-      [sequelize.fn('COUNT', sequelize.col('Orders.id')), 'orderCount']
+      [sequelize.fn('COUNT', sequelize.col('Orders.id')), 'orderCount'],
     ],
-    include: [{
-      model: Order,
-      attributes: [],
-      required: false
-    }],
+    include: [
+      {
+        model: Order,
+        attributes: [],
+        required: false,
+      },
+    ],
     group: ['User.id'],
     order: [[sequelize.literal('orderCount'), 'DESC']],
-    limit: 5
+    limit: 5,
   });
-  
+
   res.json({
     totalUsers,
     adminUsers,
     regularUsers,
-    activeUsers
+    activeUsers,
   });
 });
 
@@ -108,5 +110,5 @@ module.exports = {
   getUserById,
   updateUser,
   deleteUser,
-  getUserStats
+  getUserStats,
 };
